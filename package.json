@@ -1,0 +1,25 @@
+{
+  "name": "accounting",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "init-db": "node scripts/init-db.js",
+    "test": "node --test test/CanonicalHasher.test.js test/SqliteSyncStore.test.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "mssql": "^12.5.5",
+    "node-cron": "^4.2.1",
+    "pg": "^8.21.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.1"
+  }
+}
