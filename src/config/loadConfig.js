@@ -16,7 +16,8 @@ function loadConfig() {
       },
     },
     sqlitePath: path.resolve(
-      process.env.SQLITE_PATH || path.join(process.cwd(), "data", "accounting-sync.sqlite"),
+      process.env.SQLITE_PATH ||
+        path.join(process.cwd(), "data", "accounting-sync.sqlite"),
     ),
     sourceId: process.env.SYNC_SOURCE_ID || databaseName || "local-mssql",
     targetBaseUrl: process.env.TARGET_BASE_URL || "http://localhost:5000",

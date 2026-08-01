@@ -12,8 +12,10 @@ class SqliteSyncStore {
 
   startRun(scanId, entityType) {
     this.database
-      .prepare(`INSERT INTO sync_run (scan_id, entity_type, started_at, status)
-                VALUES (?, ?, ?, 'running')`)
+      .prepare(
+        `INSERT INTO sync_run (scan_id, entity_type, started_at, status)
+                VALUES (?, ?, ?, 'running')`,
+      )
       .run(scanId, entityType, new Date().toISOString());
   }
 
@@ -55,16 +57,28 @@ class SqliteSyncStore {
           now,
         );
 
-        if (existing?.acknowledged_hash !== record.hash || existing?.deleted === 1) {
-          enqueue.run(entityType, record.sourceKey, "UPSERT", record.hash, payloadJson, now);
+        if (
+          existing?.acknowledged_hash !== record.hash ||
+          existing?.deleted === 1
+        ) {
+          enqueue.run(
+            entityType,
+            record.sourceKey,
+            "UPSERT",
+            record.hash,
+            payloadJson,
+            now,
+          );
         }
       }
 
       if (detectDeletions) {
         const missing = this.database
-          .prepare(`SELECT source_key, current_hash
+          .prepare(
+            `SELECT source_key, current_hash
                     FROM current_entity
-                    WHERE entity_type = ? AND last_seen_scan <> ? AND deleted = 0`)
+                    WHERE entity_type = ? AND last_seen_scan <> ? AND deleted = 0`,
+          )
           .all(entityType, scanId);
 
         const markDeleted = this.database.prepare(`
@@ -75,7 +89,14 @@ class SqliteSyncStore {
         for (const record of missing) {
           const now = new Date().toISOString();
           markDeleted.run(now, entityType, record.source_key);
-          enqueue.run(entityType, record.source_key, "DELETE", record.current_hash, null, now);
+          enqueue.run(
+            entityType,
+            record.source_key,
+            "DELETE",
+            record.current_hash,
+            null,
+            now,
+          );
         }
       }
     });
@@ -83,26 +104,32 @@ class SqliteSyncStore {
 
   completeRun(scanId) {
     this.database
-      .prepare("UPDATE sync_run SET status = 'completed', completed_at = ? WHERE scan_id = ?")
+      .prepare(
+        "UPDATE sync_run SET status = 'completed', completed_at = ? WHERE scan_id = ?",
+      )
       .run(new Date().toISOString(), scanId);
   }
 
   failRun(scanId, error) {
     this.database
-      .prepare(`UPDATE sync_run
+      .prepare(
+        `UPDATE sync_run
                 SET status = 'failed', completed_at = ?, error_message = ?
-                WHERE scan_id = ?`)
+                WHERE scan_id = ?`,
+      )
       .run(new Date().toISOString(), String(error.message || error), scanId);
   }
 
   pendingEvents(entityType, operation) {
     return this.database
-      .prepare(`SELECT event_id AS eventId, entity_type AS entityType,
+      .prepare(
+        `SELECT event_id AS eventId, entity_type AS entityType,
                        source_key AS sourceKey, operation, hash,
                        payload_json AS payloadJson, attempts
                 FROM outbox
                 WHERE entity_type = ? AND operation = ? AND acknowledged_at IS NULL
-                ORDER BY event_id`)
+                ORDER BY event_id`,
+      )
       .all(entityType, operation);
   }
 
@@ -128,7 +155,12 @@ class SqliteSyncStore {
       const now = new Date().toISOString();
       for (const event of events) {
         acknowledgeEvent.run(now, event.eventId);
-        acknowledgeEntity.run(event.hash, event.entityType, event.sourceKey, event.hash);
+        acknowledgeEntity.run(
+          event.hash,
+          event.entityType,
+          event.sourceKey,
+          event.hash,
+        );
       }
     });
   }
