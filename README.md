@@ -18,6 +18,19 @@ records durable synchronization state in SQLite, and uploads pending records.
 Run `npm.cmd run init-db` to initialize the local SQLite database, then run
 `npm.cmd start` to start the service. Set `SYNC_CRON` to enable scheduled runs.
 
+Configure one dataset per MSSQL database with numbered environment values:
+
+```text
+MSSQL_DATABASE_1=<2025-2026 database>
+MSSQL_FINANCIAL_YEAR_1=2025-2026
+MSSQL_DATABASE_2=<2026-2027 database>
+MSSQL_FINANCIAL_YEAR_2=2026-2027
+```
+
+Additional numbered database/year pairs are discovered automatically. If the
+individual year values are omitted, consecutive years are inferred from
+`MSSQL_FINANCIAL_YEAR_START`, which defaults to `2025`.
+
 Deletion detection is disabled by default. It can be enabled with
 `SYNC_DETECT_DELETIONS=true`; delete events are retained in the outbox until a
 remote delete protocol is implemented.

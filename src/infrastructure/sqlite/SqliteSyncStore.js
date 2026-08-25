@@ -40,6 +40,14 @@ class SqliteSyncStore {
         entity_type, source_key, operation, hash, payload_json, created_at
       ) VALUES (?, ?, ?, ?, ?, ?)
     `);
+    const supersedePendingUpserts = this.database.prepare(`
+      UPDATE outbox SET acknowledged_at = ?
+      WHERE entity_type = ?
+        AND source_key = ?
+        AND operation = 'UPSERT'
+        AND acknowledged_at IS NULL
+        AND hash <> ?
+    `);
 
     this.#transaction(() => {
       for (const record of records) {
@@ -61,6 +69,12 @@ class SqliteSyncStore {
           existing?.acknowledged_hash !== record.hash ||
           existing?.deleted === 1
         ) {
+          supersedePendingUpserts.run(
+            now,
+            entityType,
+            record.sourceKey,
+            record.hash,
+          );
           enqueue.run(
             entityType,
             record.sourceKey,

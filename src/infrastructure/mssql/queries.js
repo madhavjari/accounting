@@ -4,6 +4,7 @@ SELECT
     -- BillMaster
     bm.EntryId,
     bm.CompNo,
+    bm.Opening,
     bm.Code,
     bm.Book,
     bm.Serial AS BillNo,
@@ -84,6 +85,7 @@ SELECT
     -- AccountVoucherMaster
     avm.EntryId,
     avm.CompNo,
+    avm.Opening,
     avm.Date,
     avm.Mode,
     avm.VchrType,

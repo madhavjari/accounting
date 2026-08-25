@@ -37,3 +37,38 @@ test("creates three sync tables and persists an acknowledged snapshot", () => {
 
   fs.rmSync(directory, { recursive: true, force: true });
 });
+
+test("supersedes an unacknowledged payload when its normalized value changes", () => {
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), "accounting-sync-test-"));
+  const databasePath = path.join(directory, "sync.sqlite");
+  const store = new SqliteSyncStore(databasePath);
+  const sourceKey = '["source","voucher",1,10]';
+
+  store.startRun("scan-1", "voucher");
+  store.saveSnapshot("scan-1", "voucher", [
+    {
+      sourceKey,
+      hash: "numeric-hash",
+      payload: { entryId: 10, compNo: 1, slipNo: 123 },
+    },
+  ]);
+  store.completeRun("scan-1");
+
+  store.startRun("scan-2", "voucher");
+  store.saveSnapshot("scan-2", "voucher", [
+    {
+      sourceKey,
+      hash: "text-hash",
+      payload: { entryId: 10, compNo: 1, slipNo: "123" },
+    },
+  ]);
+  store.completeRun("scan-2");
+
+  const pending = store.pendingEvents("voucher", "UPSERT");
+  assert.equal(pending.length, 1);
+  assert.equal(pending[0].hash, "text-hash");
+  assert.equal(JSON.parse(pending[0].payloadJson).slipNo, "123");
+
+  store.close();
+  fs.rmSync(directory, { recursive: true, force: true });
+});

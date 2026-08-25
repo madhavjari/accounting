@@ -6,6 +6,7 @@ class SyncService {
   constructor({
     entityType,
     sourceId,
+    syncScope = null,
     repository,
     hasher,
     syncStore,
@@ -24,6 +25,9 @@ class SyncService {
     }
 
     this.entityType = entityType;
+    this.storeEntityType = syncScope
+      ? `${entityType}:${syncScope}`
+      : entityType;
     this.sourceId = sourceId;
     this.repository = repository;
     this.hasher = hasher;
@@ -35,7 +39,7 @@ class SyncService {
 
   async synchronize() {
     const scanId = crypto.randomUUID();
-    this.syncStore.startRun(scanId, this.entityType);
+    this.syncStore.startRun(scanId, this.storeEntityType);
 
     let entities;
     try {
@@ -53,7 +57,7 @@ class SyncService {
 
       this.syncStore.saveSnapshot(
         scanId,
-        this.entityType,
+        this.storeEntityType,
         records,
         this.detectDeletions,
       );
@@ -64,7 +68,7 @@ class SyncService {
     }
 
     const pendingUpserts = this.syncStore.pendingEvents(
-      this.entityType,
+      this.storeEntityType,
       "UPSERT",
     );
     let uploaded = 0;
@@ -81,7 +85,7 @@ class SyncService {
       extracted: entities.length,
       uploaded,
       pendingDeletes: this.syncStore.pendingEvents(
-        this.entityType,
+        this.storeEntityType,
         "DELETE",
       ).length,
     };

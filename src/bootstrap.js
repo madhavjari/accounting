@@ -13,31 +13,52 @@ const HttpSyncTarget = require("./infrastructure/http/HttpSyncTarget");
 
 async function bootstrap() {
   const config = loadConfig();
-  const pool = await new sql.ConnectionPool(config.mssql).connect();
   const syncStore = new SqliteSyncStore(config.sqlitePath);
   const target = new HttpSyncTarget(config.targetBaseUrl, config.syncApiKey);
   const hasher = new CanonicalHasher();
+  const pools = [];
+  const services = [];
 
-  const services = [
-    new SyncService({
-      entityType: "bill",
-      sourceId: config.sourceId,
-      repository: new MssqlReadRepository(pool, BILLS_QUERY, groupBills),
-      hasher,
-      syncStore,
-      target,
-      detectDeletions: config.detectDeletions,
-    }),
-    new SyncService({
-      entityType: "voucher",
-      sourceId: config.sourceId,
-      repository: new MssqlReadRepository(pool, VOUCHERS_QUERY, groupVouchers),
-      hasher,
-      syncStore,
-      target,
-      detectDeletions: config.detectDeletions,
-    }),
-  ];
+  for (const dataset of config.datasets) {
+    const pool = await new sql.ConnectionPool(dataset.mssql).connect();
+    pools.push(pool);
+    const addFinancialYear = (groupRows) => (rows) =>
+      groupRows(rows).map((record) => ({
+        ...record,
+        financialYear: dataset.financialYear,
+      }));
+
+    services.push(
+      new SyncService({
+        entityType: "bill",
+        sourceId: dataset.sourceId,
+        syncScope: dataset.storageScope,
+        repository: new MssqlReadRepository(
+          pool,
+          BILLS_QUERY,
+          addFinancialYear(groupBills),
+        ),
+        hasher,
+        syncStore,
+        target,
+        detectDeletions: config.detectDeletions,
+      }),
+      new SyncService({
+        entityType: "voucher",
+        sourceId: dataset.sourceId,
+        syncScope: dataset.storageScope,
+        repository: new MssqlReadRepository(
+          pool,
+          VOUCHERS_QUERY,
+          addFinancialYear(groupVouchers),
+        ),
+        hasher,
+        syncStore,
+        target,
+        detectDeletions: config.detectDeletions,
+      }),
+    );
+  }
 
   let running = false;
   const runAll = async () => {
@@ -46,7 +67,7 @@ async function bootstrap() {
     try {
       for (const service of services) {
         const result = await service.synchronize();
-        console.log(`${service.entityType} sync:`, result);
+        console.log(`${service.storeEntityType} sync:`, result);
       }
     } catch (error) {
       console.error("Synchronization failed:", error.message);
@@ -56,7 +77,16 @@ async function bootstrap() {
   };
 
   const app = express();
-  app.get("/health", (_request, response) => response.json({ ok: true, running }));
+  app.get("/health", (_request, response) =>
+    response.json({
+      ok: true,
+      running,
+      datasets: config.datasets.map(({ database, financialYear }) => ({
+        database,
+        financialYear,
+      })),
+    }),
+  );
   app.listen(config.port, () => console.log(`Service listening on port ${config.port}`));
 
   await runAll();

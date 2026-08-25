@@ -1,11 +1,20 @@
+function isOpeningRecord(value) {
+  if (value === true || value === 1) return true;
+  return ["Y", "YES", "TRUE", "1"].includes(
+    String(value ?? "").trim().toUpperCase(),
+  );
+}
+
 function groupBills(rows) {
   const bills = new Map();
 
   for (const row of rows) {
-    if (!bills.has(row.EntryId)) {
-      bills.set(row.EntryId, {
+    const recordKey = JSON.stringify([row.CompNo, row.EntryId]);
+    if (!bills.has(recordKey)) {
+      bills.set(recordKey, {
         entryId: row.EntryId,
         compNo: row.CompNo,
+        isOpening: isOpeningRecord(row.Opening),
         code: row.Code,
         billNo: row.BillNo + row.BillChr,
         date: row.Date,
@@ -27,7 +36,7 @@ function groupBills(rows) {
       });
     }
 
-    bills.get(row.EntryId).items.push({
+    bills.get(recordKey).items.push({
       serial: row.BillSerial + row.BillSrChr,
       itemCode: row.ItemCode,
       itemName: row.ItemName,

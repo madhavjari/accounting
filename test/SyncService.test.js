@@ -82,3 +82,32 @@ test("keeps completed batches acknowledged when a later batch fails", async () =
   assert.deepEqual(fixture.attemptedBatches, [[1, 2], [3, 4]]);
   assert.deepEqual(fixture.acknowledgedBatches, [[1, 2]]);
 });
+
+test("uses an isolated local outbox namespace for another database", async () => {
+  const calls = [];
+  const service = new SyncService({
+    entityType: "bill",
+    sourceId: "office-pc:database-2",
+    syncScope: "database-2",
+    repository: { async findAll() { return []; } },
+    hasher: { hash() { return "hash"; } },
+    syncStore: {
+      startRun(_scanId, entityType) { calls.push(entityType); },
+      saveSnapshot(_scanId, entityType) { calls.push(entityType); },
+      completeRun() {},
+      failRun() {},
+      pendingEvents(entityType) { calls.push(entityType); return []; },
+    },
+    target: { async sendUpserts() {} },
+    detectDeletions: true,
+  });
+
+  await service.synchronize();
+
+  assert.deepEqual(calls, [
+    "bill:database-2",
+    "bill:database-2",
+    "bill:database-2",
+    "bill:database-2",
+  ]);
+});
