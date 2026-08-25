@@ -21,6 +21,7 @@ function loadConfig() {
     ),
     sourceId: process.env.SYNC_SOURCE_ID || databaseName || "local-mssql",
     targetBaseUrl: process.env.TARGET_BASE_URL || "http://localhost:5000",
+    syncApiKey: process.env.SYNC_API_KEY,
     port: Number(process.env.PORT || 3000),
     cronExpression: process.env.SYNC_CRON || null,
     detectDeletions: process.env.SYNC_DETECT_DELETIONS === "true",

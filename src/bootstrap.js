@@ -15,7 +15,7 @@ async function bootstrap() {
   const config = loadConfig();
   const pool = await new sql.ConnectionPool(config.mssql).connect();
   const syncStore = new SqliteSyncStore(config.sqlitePath);
-  const target = new HttpSyncTarget(config.targetBaseUrl);
+  const target = new HttpSyncTarget(config.targetBaseUrl, config.syncApiKey);
   const hasher = new CanonicalHasher();
 
   const services = [
