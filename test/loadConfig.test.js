@@ -10,6 +10,7 @@ const CONFIG_KEYS = [
   "MSSQL_FINANCIAL_YEAR_START",
   "SYNC_SOURCE_ID",
   "SYNC_DATASET_INDEX",
+  "SYNC_RETURN_ADJUSTMENTS",
 ];
 
 function withEnvironment(values, work) {
@@ -91,6 +92,22 @@ test("can restrict a run to one numbered database", () => {
       assert.equal(config.datasets.length, 1);
       assert.equal(config.datasets[0].index, 2);
       assert.equal(config.datasets[0].financialYear, "2026-2027");
+    },
+  );
+});
+
+test("keeps return adjustments disabled until explicitly enabled", () => {
+  withEnvironment({ MSSQL_DATABASE_1: "Books" }, () => {
+    assert.equal(loadConfig().syncReturnAdjustments, false);
+  });
+
+  withEnvironment(
+    {
+      MSSQL_DATABASE_1: "Books",
+      SYNC_RETURN_ADJUSTMENTS: "true",
+    },
+    () => {
+      assert.equal(loadConfig().syncReturnAdjustments, true);
     },
   );
 });

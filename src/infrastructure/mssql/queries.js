@@ -126,4 +126,19 @@ SELECT
     avm.EntryId
   `.replace(/\n/g, "\r\n");
 
-module.exports = { BILLS_QUERY, VOUCHERS_QUERY };
+const RETURN_ADJUSTMENTS_QUERY = `
+SELECT
+    EntryId,
+    LinkId,
+    BillId,
+    AdjustAmt,
+    CompNo
+
+    FROM BILLRETADJDET
+
+    ORDER BY
+    BillId,
+    EntryId;
+  `.replace(/\n/g, "\r\n");
+
+module.exports = { BILLS_QUERY, VOUCHERS_QUERY, RETURN_ADJUSTMENTS_QUERY };

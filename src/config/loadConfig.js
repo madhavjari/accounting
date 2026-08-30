@@ -95,6 +95,8 @@ function loadConfig() {
     port: Number(process.env.PORT || 3000),
     cronExpression: process.env.SYNC_CRON || null,
     detectDeletions: process.env.SYNC_DETECT_DELETIONS === "true",
+    syncReturnAdjustments:
+      process.env.SYNC_RETURN_ADJUSTMENTS === "true",
   };
 }
 

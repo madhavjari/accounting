@@ -7,7 +7,12 @@ const groupBills = require("./domain/groupBills");
 const groupVouchers = require("./domain/groupVouchers");
 const SyncService = require("./application/SyncService");
 const MssqlReadRepository = require("./infrastructure/mssql/MssqlReadRepository");
-const { BILLS_QUERY, VOUCHERS_QUERY } = require("./infrastructure/mssql/queries");
+const MssqlBillReadRepository = require("./infrastructure/mssql/MssqlBillReadRepository");
+const {
+  BILLS_QUERY,
+  VOUCHERS_QUERY,
+  RETURN_ADJUSTMENTS_QUERY,
+} = require("./infrastructure/mssql/queries");
 const SqliteSyncStore = require("./infrastructure/sqlite/SqliteSyncStore");
 const HttpSyncTarget = require("./infrastructure/http/HttpSyncTarget");
 
@@ -33,11 +38,14 @@ async function bootstrap() {
         entityType: "bill",
         sourceId: dataset.sourceId,
         syncScope: dataset.storageScope,
-        repository: new MssqlReadRepository(
+        repository: new MssqlBillReadRepository({
           pool,
-          BILLS_QUERY,
-          addFinancialYear(groupBills),
-        ),
+          billsQuery: BILLS_QUERY,
+          billMapper: addFinancialYear(groupBills),
+          returnAdjustmentsQuery: config.syncReturnAdjustments
+            ? RETURN_ADJUSTMENTS_QUERY
+            : null,
+        }),
         hasher,
         syncStore,
         target,
@@ -85,6 +93,7 @@ async function bootstrap() {
         database,
         financialYear,
       })),
+      returnAdjustments: config.syncReturnAdjustments,
     }),
   );
   app.listen(config.port, () => console.log(`Service listening on port ${config.port}`));

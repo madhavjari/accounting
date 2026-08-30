@@ -34,6 +34,12 @@ individual year values are omitted, consecutive years are inferred from
 Set `SYNC_DATASET_INDEX` for a one-database run, such as `2` to synchronize
 only `MSSQL_DATABASE_2`.
 
+Return-adjustment extraction is disabled by default. After the backend
+`BillReturnAdjustment` migration and ingestion support are deployed, set
+`SYNC_RETURN_ADJUSTMENTS=true` to attach `BILLRETADJDET` rows to their original
+bills. The enriched bill payloads are tracked by the existing SQLite snapshot
+and outbox tables; no additional SQLite table is required.
+
 Deletion detection is disabled by default. It can be enabled with
 `SYNC_DETECT_DELETIONS=true`; delete events are retained in the outbox until a
 remote delete protocol is implemented.
