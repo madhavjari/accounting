@@ -5,6 +5,12 @@ function isOpeningRecord(value) {
   );
 }
 
+function joinIdentifier(...parts) {
+  return parts
+    .filter((part) => part !== undefined && part !== null)
+    .join("");
+}
+
 function groupBills(rows) {
   const bills = new Map();
 
@@ -16,7 +22,7 @@ function groupBills(rows) {
         compNo: row.CompNo,
         isOpening: isOpeningRecord(row.Opening),
         code: row.Code,
-        billNo: row.BillNo + row.BillChr,
+        billNo: joinIdentifier(row.BillNo, row.BillChr),
         date: row.Date,
         party: row.Party,
         partyCode: row.PartyCode,
@@ -25,9 +31,9 @@ function groupBills(rows) {
         grossAmount: row.GrossAmount,
         netAmount: row.NetAmount,
 
-        cgst: row.CGSTAmt,
-        sgst: row.SGSTAmt,
-        igst: row.IGSTAmt,
+        cgst: row.TOTCGSTAmt,
+        sgst: row.TOTSGSTAmt,
+        igst: row.TOTIGSTAmt,
 
         modifyDate: row._ModifyDate,
         modifyTime: row._ModifyTime,
@@ -36,8 +42,12 @@ function groupBills(rows) {
       });
     }
 
+    if (row.DetailEntryId === null || row.DetailEntryId === undefined) {
+      continue;
+    }
+
     bills.get(recordKey).items.push({
-      serial: row.BillSerial + row.BillSrChr,
+      serial: joinIdentifier(row.BillSerial, row.BillSrChr),
       itemCode: row.ItemCode,
       itemName: row.ItemName,
       category: row.Category,

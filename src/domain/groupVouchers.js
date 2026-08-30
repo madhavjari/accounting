@@ -10,6 +10,12 @@ function isOpeningRecord(value) {
   );
 }
 
+function joinIdentifier(...parts) {
+  return parts
+    .filter((part) => part !== undefined && part !== null)
+    .join("");
+}
+
 function groupVouchers(rows) {
   const vouchers = new Map();
 
@@ -50,7 +56,7 @@ function groupVouchers(rows) {
       entryId: row.VoucherEntryId,
 
       code: row.Code,
-      billNo: row.BillSr + row.BillChr,
+      billNo: joinIdentifier(row.BillSr, row.BillChr),
       date: row.DetailDate,
       mode: row.DetailMode,
 

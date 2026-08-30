@@ -31,6 +31,9 @@ Additional numbered database/year pairs are discovered automatically. If the
 individual year values are omitted, consecutive years are inferred from
 `MSSQL_FINANCIAL_YEAR_START`, which defaults to `2025`.
 
+Set `SYNC_DATASET_INDEX` for a one-database run, such as `2` to synchronize
+only `MSSQL_DATABASE_2`.
+
 Deletion detection is disabled by default. It can be enabled with
 `SYNC_DETECT_DELETIONS=true`; delete events are retained in the outbox until a
 remote delete protocol is implemented.

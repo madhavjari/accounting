@@ -71,7 +71,7 @@ SELECT
 
     FROM BillMast bm
 
-    INNER JOIN BillData bd
+    LEFT JOIN BillData bd
     ON bm.EntryId = bd.ControlId
 
     ORDER BY

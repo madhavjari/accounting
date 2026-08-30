@@ -36,7 +36,7 @@ function loadDatasets(baseMssql) {
   const baseSourceId =
     process.env.SYNC_SOURCE_ID || databases[0].database || "local-mssql";
 
-  return databases.map(({ index, database }, position) => {
+  const datasets = databases.map(({ index, database }, position) => {
     const inferredStartYear = firstFinancialYearStart + position;
     const variableName = `MSSQL_FINANCIAL_YEAR_${index}`;
     const financialYear = validateFinancialYear(
@@ -55,6 +55,21 @@ function loadDatasets(baseMssql) {
       storageScope: position === 0 ? null : `database-${index}`,
     };
   });
+
+  const requestedDatasetIndex = process.env.SYNC_DATASET_INDEX;
+  if (!requestedDatasetIndex) return datasets;
+
+  const datasetIndex = Number(requestedDatasetIndex);
+  const selectedDataset = datasets.find(
+    (dataset) => dataset.index === datasetIndex,
+  );
+  if (!selectedDataset) {
+    throw new Error(
+      `SYNC_DATASET_INDEX ${requestedDatasetIndex} is not configured`,
+    );
+  }
+
+  return [selectedDataset];
 }
 
 function loadConfig() {

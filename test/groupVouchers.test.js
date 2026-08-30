@@ -12,6 +12,8 @@ test("normalizes numeric voucher identifiers to nullable text", () => {
       RefNo: 456,
       Cheque: 789,
       VoucherEntryId: 1,
+      BillSr: "S-1",
+      BillChr: null,
     },
   ]);
 
@@ -19,6 +21,7 @@ test("normalizes numeric voucher identifiers to nullable text", () => {
   assert.equal(voucher.refNo, "456");
   assert.equal(voucher.chequeNo, "789");
   assert.equal(voucher.isOpening, true);
+  assert.equal(voucher.items[0].billNo, "S-1");
 });
 
 test("normalizes missing voucher identifiers to null", () => {

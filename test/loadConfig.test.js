@@ -9,6 +9,7 @@ const CONFIG_KEYS = [
   "MSSQL_FINANCIAL_YEAR_2",
   "MSSQL_FINANCIAL_YEAR_START",
   "SYNC_SOURCE_ID",
+  "SYNC_DATASET_INDEX",
 ];
 
 function withEnvironment(values, work) {
@@ -73,6 +74,23 @@ test("rejects a non-consecutive explicit financial year", () => {
     },
     () => {
       assert.throws(loadConfig, /consecutive years/);
+    },
+  );
+});
+
+test("can restrict a run to one numbered database", () => {
+  withEnvironment(
+    {
+      MSSQL_DATABASE_1: "Books2025",
+      MSSQL_DATABASE_2: "Books2026",
+      SYNC_DATASET_INDEX: "2",
+    },
+    () => {
+      const config = loadConfig();
+
+      assert.equal(config.datasets.length, 1);
+      assert.equal(config.datasets[0].index, 2);
+      assert.equal(config.datasets[0].financialYear, "2026-2027");
     },
   );
 });
