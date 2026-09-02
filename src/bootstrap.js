@@ -76,6 +76,7 @@ async function bootstrap() {
       for (const service of services) {
         const result = await service.synchronize();
         console.log(`${service.storeEntityType} sync:`, result);
+        console.log(Date.now());
       }
     } catch (error) {
       console.error("Synchronization failed:", error.message);
@@ -96,7 +97,9 @@ async function bootstrap() {
       returnAdjustments: config.syncReturnAdjustments,
     }),
   );
-  app.listen(config.port, () => console.log(`Service listening on port ${config.port}`));
+  app.listen(config.port, () =>
+    console.log(`Service listening on port ${config.port}`),
+  );
 
   await runAll();
   if (config.cronExpression) cron.schedule(config.cronExpression, runAll);

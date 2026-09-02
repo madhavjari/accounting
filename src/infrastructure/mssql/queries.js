@@ -120,7 +120,7 @@ SELECT
     INNER JOIN ACCVCHRDET avd
     ON avm.EntryId = avd.ControlId
 
-    WHERE avd.Code IN ('BR', 'BP')
+    WHERE avd.Code IN ('BR', 'BP','CP','CR')
 
     ORDER BY
     avm.EntryId
