@@ -105,6 +105,7 @@ SELECT
     avd.ControlId,
     avd.EntryId AS VoucherEntryId,
     avd.Code,
+    avd.BillId,
     avd.BillSr,
     avd.BillChr,
     avd.Date     AS DetailDate,

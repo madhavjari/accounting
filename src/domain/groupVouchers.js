@@ -56,6 +56,7 @@ function groupVouchers(rows) {
       entryId: row.VoucherEntryId,
 
       code: row.Code,
+      billEntrySourceId: nullableText(row.BillId),
       billNo: joinIdentifier(row.BillSr, row.BillChr),
       date: row.DetailDate,
       mode: row.DetailMode,
