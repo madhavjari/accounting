@@ -12,6 +12,7 @@ class SyncService {
     syncStore,
     target,
     detectDeletions,
+    deletionPolicy = null,
     batchSize = MAX_UPSERT_BATCH_SIZE,
   }) {
     if (
@@ -34,6 +35,7 @@ class SyncService {
     this.syncStore = syncStore;
     this.target = target;
     this.detectDeletions = detectDeletions;
+    this.deletionPolicy = deletionPolicy ?? { enabled: detectDeletions };
     this.batchSize = batchSize;
   }
 
@@ -59,7 +61,7 @@ class SyncService {
         scanId,
         this.storeEntityType,
         records,
-        this.detectDeletions,
+        this.deletionPolicy,
       );
       this.syncStore.completeRun(scanId);
     } catch (error) {
@@ -81,9 +83,25 @@ class SyncService {
       uploaded += batch.length;
     }
 
+    let deleted = 0;
+    if (this.detectDeletions) {
+      const pendingDeletes = this.syncStore.pendingEvents(
+        this.storeEntityType,
+        "DELETE",
+      );
+      for (let start = 0; start < pendingDeletes.length; start += this.batchSize) {
+        const batch = pendingDeletes.slice(start, start + this.batchSize);
+        this.syncStore.markAttempted(batch.map((event) => event.eventId));
+        const result = await this.target.sendDeletes(this.entityType, batch);
+        this.syncStore.acknowledge(batch);
+        deleted += Number.isInteger(result?.count) ? result.count : batch.length;
+      }
+    }
+
     return {
       extracted: entities.length,
       uploaded,
+      deleted,
       pendingDeletes: this.syncStore.pendingEvents(
         this.storeEntityType,
         "DELETE",

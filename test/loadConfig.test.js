@@ -12,6 +12,11 @@ const CONFIG_KEYS = [
   "SYNC_SOURCE_ID",
   "SYNC_DATASET_INDEX",
   "SYNC_RETURN_ADJUSTMENTS",
+  "SYNC_DETECT_DELETIONS",
+  "SYNC_DELETE_CONFIRM_SCANS",
+  "SYNC_DELETE_MAX_COUNT",
+  "SYNC_DELETE_MAX_PERCENT",
+  "SYNC_ALLOW_EMPTY_DELETE_SCAN",
 ];
 
 function withEnvironment(values, work) {
@@ -113,4 +118,34 @@ test("keeps return adjustments disabled until explicitly enabled", () => {
       assert.equal(loadConfig().syncReturnAdjustments, true);
     },
   );
+});
+
+test("uses conservative deletion defaults and requires explicit enablement", () => {
+  withEnvironment({ MSSQL_DATABASE_1: "Books" }, () => {
+    const config = loadConfig();
+    assert.equal(config.detectDeletions, false);
+    assert.deepEqual(config.deletionPolicy, {
+      enabled: false,
+      confirmationScans: 2,
+      maxCount: 25,
+      maxPercent: 10,
+      allowEmptyScan: false,
+    });
+  });
+
+  withEnvironment({
+    MSSQL_DATABASE_1: "Books",
+    SYNC_DETECT_DELETIONS: "true",
+    SYNC_DELETE_CONFIRM_SCANS: "3",
+    SYNC_DELETE_MAX_COUNT: "5",
+    SYNC_DELETE_MAX_PERCENT: "2.5",
+  }, () => {
+    assert.deepEqual(loadConfig().deletionPolicy, {
+      enabled: true,
+      confirmationScans: 3,
+      maxCount: 5,
+      maxPercent: 2.5,
+      allowEmptyScan: false,
+    });
+  });
 });

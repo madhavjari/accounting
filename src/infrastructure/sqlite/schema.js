@@ -19,6 +19,7 @@ CREATE TABLE IF NOT EXISTS current_entity (
   acknowledged_hash TEXT,
   last_seen_scan TEXT NOT NULL,
   deleted INTEGER NOT NULL DEFAULT 0 CHECK (deleted IN (0, 1)),
+  missing_scans INTEGER NOT NULL DEFAULT 0,
   updated_at TEXT NOT NULL,
   PRIMARY KEY (entity_type, source_key),
   FOREIGN KEY (last_seen_scan) REFERENCES sync_run(scan_id)

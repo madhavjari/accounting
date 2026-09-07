@@ -109,5 +109,70 @@ test("uses an isolated local outbox namespace for another database", async () =>
     "bill:database-2",
     "bill:database-2",
     "bill:database-2",
+    "bill:database-2",
   ]);
+});
+
+test("uploads and acknowledges delete events only when deletion is enabled", async () => {
+  const deleteEvents = [{
+    eventId: 9,
+    payloadJson: JSON.stringify({
+      financialYear: "2025-2026",
+      compNo: 1,
+      entryId: 100,
+    }),
+  }];
+  const acknowledged = [];
+  const deleted = [];
+  const service = new SyncService({
+    entityType: "bill",
+    sourceId: "source-1",
+    repository: { async findAll() { return []; } },
+    hasher: { hash() { return "hash"; } },
+    syncStore: {
+      startRun() {}, saveSnapshot() {}, completeRun() {}, failRun() {},
+      pendingEvents(_entityType, operation) {
+        return operation === "DELETE" ? deleteEvents : [];
+      },
+      markAttempted() {},
+      acknowledge(events) { acknowledged.push(...events); },
+    },
+    target: {
+      async sendUpserts() {},
+      async sendDeletes(_entityType, events) { deleted.push(...events); },
+    },
+    detectDeletions: true,
+  });
+
+  const result = await service.synchronize();
+  assert.equal(result.deleted, 1);
+  assert.deepEqual(deleted, deleteEvents);
+  assert.deepEqual(acknowledged, deleteEvents);
+});
+
+test("leaves delete events pending when the remote delete fails", async () => {
+  const deleteEvents = [{ eventId: 9, payloadJson: "{}" }];
+  let acknowledged = false;
+  const service = new SyncService({
+    entityType: "bill",
+    sourceId: "source-1",
+    repository: { async findAll() { return []; } },
+    hasher: { hash() { return "hash"; } },
+    syncStore: {
+      startRun() {}, saveSnapshot() {}, completeRun() {}, failRun() {},
+      pendingEvents(_entityType, operation) {
+        return operation === "DELETE" ? deleteEvents : [];
+      },
+      markAttempted() {},
+      acknowledge() { acknowledged = true; },
+    },
+    target: {
+      async sendUpserts() {},
+      async sendDeletes() { throw new Error("remote unavailable"); },
+    },
+    detectDeletions: true,
+  });
+
+  await assert.rejects(service.synchronize(), /remote unavailable/);
+  assert.equal(acknowledged, false);
 });

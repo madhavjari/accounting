@@ -12,6 +12,22 @@ function validateFinancialYear(value, variableName) {
   return value;
 }
 
+function positiveInteger(value, variableName, fallback) {
+  const parsed = Number(value ?? fallback);
+  if (!Number.isInteger(parsed) || parsed < 1) {
+    throw new Error(`${variableName} must be a positive integer`);
+  }
+  return parsed;
+}
+
+function percentage(value, variableName, fallback) {
+  const parsed = Number(value ?? fallback);
+  if (!Number.isFinite(parsed) || parsed <= 0 || parsed > 100) {
+    throw new Error(`${variableName} must be greater than 0 and at most 100`);
+  }
+  return parsed;
+}
+
 function loadDatasets(baseMssql) {
   const databases = Object.entries(process.env)
     .map(([key, value]) => {
@@ -96,6 +112,25 @@ function loadConfig() {
     port: Number(process.env.PORT || 3000),
     cronExpression: process.env.SYNC_CRON || null,
     detectDeletions: process.env.SYNC_DETECT_DELETIONS === "true",
+    deletionPolicy: {
+      enabled: process.env.SYNC_DETECT_DELETIONS === "true",
+      confirmationScans: positiveInteger(
+        process.env.SYNC_DELETE_CONFIRM_SCANS,
+        "SYNC_DELETE_CONFIRM_SCANS",
+        2,
+      ),
+      maxCount: positiveInteger(
+        process.env.SYNC_DELETE_MAX_COUNT,
+        "SYNC_DELETE_MAX_COUNT",
+        25,
+      ),
+      maxPercent: percentage(
+        process.env.SYNC_DELETE_MAX_PERCENT,
+        "SYNC_DELETE_MAX_PERCENT",
+        10,
+      ),
+      allowEmptyScan: process.env.SYNC_ALLOW_EMPTY_DELETE_SCAN === "true",
+    },
     syncReturnAdjustments:
       process.env.SYNC_RETURN_ADJUSTMENTS === "true",
   };

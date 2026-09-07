@@ -50,6 +50,7 @@ async function bootstrap() {
         syncStore,
         target,
         detectDeletions: config.detectDeletions,
+        deletionPolicy: config.deletionPolicy,
       }),
       new SyncService({
         entityType: "voucher",
@@ -64,6 +65,7 @@ async function bootstrap() {
         syncStore,
         target,
         detectDeletions: config.detectDeletions,
+        deletionPolicy: config.deletionPolicy,
       }),
     );
   }

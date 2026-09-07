@@ -13,9 +13,9 @@ class HttpSyncTarget {
     };
   }
 
-  async postJson(endpoint, payload) {
+  async requestJson(method, endpoint, payload) {
     const response = await fetch(endpoint, {
-      method: "POST",
+      method,
       headers: {
         Authorization: `Bearer ${this.apiKey}`,
         "Content-Type": "application/json",
@@ -37,6 +37,10 @@ class HttpSyncTarget {
     }
   }
 
+  async postJson(endpoint, payload) {
+    return this.requestJson("POST", endpoint, payload);
+  }
+
   async sendUpserts(entityType, events) {
     if (events.length === 0) return;
 
@@ -47,6 +51,25 @@ class HttpSyncTarget {
       endpoint,
       events.map((event) => JSON.parse(event.payloadJson)),
     );
+  }
+
+  async sendDeletes(entityType, events) {
+    if (events.length === 0) return;
+
+    const endpoint = this.endpoints[entityType];
+    if (!endpoint) throw new Error(`No target endpoint for ${entityType}`);
+
+    const records = events.map((event) => {
+      if (!event.payloadJson) {
+        throw new Error(
+          `Delete event ${event.eventId} has no source identity payload`,
+        );
+      }
+      const { financialYear, compNo, entryId } = JSON.parse(event.payloadJson);
+      return { financialYear, compNo, entryId };
+    });
+
+    return this.requestJson("DELETE", endpoint, records);
   }
 
   async sendCompanies(companies) {
