@@ -86,6 +86,7 @@ function loadConfig() {
 
   return {
     datasets: loadDatasets(baseMssql),
+    companyDatabase: process.env.MSSQL_COMPANY_DATABASE?.trim() || "MAIN",
     sqlitePath: path.resolve(
       process.env.SQLITE_PATH ||
         path.join(process.cwd(), "data", "accounting-sync.sqlite"),

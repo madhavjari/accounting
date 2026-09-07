@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node index.js",
     "init-db": "node scripts/init-db.js",
-    "test": "node --test test/attachReturnAdjustments.test.js test/CanonicalHasher.test.js test/groupBills.test.js test/groupVouchers.test.js test/HttpSyncTarget.test.js test/loadConfig.test.js test/MssqlBillReadRepository.test.js test/SqliteSyncStore.test.js test/SyncService.test.js"
+    "test": "node --test test/attachReturnAdjustments.test.js test/CanonicalHasher.test.js test/groupBills.test.js test/groupCompanies.test.js test/groupVouchers.test.js test/HttpSyncTarget.test.js test/loadConfig.test.js test/MssqlBillReadRepository.test.js test/SqliteSyncStore.test.js test/SyncService.test.js"
   },
   "keywords": [],
   "author": "",

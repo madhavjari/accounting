@@ -25,7 +25,11 @@ MSSQL_DATABASE_1=<2025-2026 database>
 MSSQL_FINANCIAL_YEAR_1=2025-2026
 MSSQL_DATABASE_2=<2026-2027 database>
 MSSQL_FINANCIAL_YEAR_2=2026-2027
+MSSQL_COMPANY_DATABASE=MAIN
 ```
+
+The company-name lookup reads `dbo.COMPANY` from `MSSQL_COMPANY_DATABASE`.
+It defaults to `MAIN` when the variable is omitted.
 
 Additional numbered database/year pairs are discovered automatically. If the
 individual year values are omitted, consecutive years are inferred from

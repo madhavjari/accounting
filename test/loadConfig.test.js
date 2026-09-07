@@ -5,6 +5,7 @@ const loadConfig = require("../src/config/loadConfig");
 const CONFIG_KEYS = [
   "MSSQL_DATABASE_1",
   "MSSQL_DATABASE_2",
+  "MSSQL_COMPANY_DATABASE",
   "MSSQL_FINANCIAL_YEAR_1",
   "MSSQL_FINANCIAL_YEAR_2",
   "MSSQL_FINANCIAL_YEAR_START",
@@ -40,6 +41,8 @@ test("discovers numbered databases and assigns consecutive years", () => {
     },
     () => {
       const config = loadConfig();
+
+      assert.equal(config.companyDatabase, "MAIN");
 
       assert.deepEqual(
         config.datasets.map((dataset) => ({

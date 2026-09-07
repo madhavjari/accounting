@@ -142,4 +142,22 @@ SELECT
     EntryId;
   `.replace(/\n/g, "\r\n");
 
-module.exports = { BILLS_QUERY, VOUCHERS_QUERY, RETURN_ADJUSTMENTS_QUERY };
+const COMPANIES_QUERY = `
+SELECT
+    CompNo AS ExternalCompanyId,
+    CompanyName
+
+    FROM COMPANY
+
+    WHERE CompNo IS NOT NULL
+      AND NULLIF(LTRIM(RTRIM(CompanyName)), '') IS NOT NULL
+
+    ORDER BY CompNo;
+  `.replace(/\n/g, "\r\n");
+
+module.exports = {
+  BILLS_QUERY,
+  VOUCHERS_QUERY,
+  RETURN_ADJUSTMENTS_QUERY,
+  COMPANIES_QUERY,
+};

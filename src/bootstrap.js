@@ -4,12 +4,14 @@ const express = require("express");
 const loadConfig = require("./config/loadConfig");
 const CanonicalHasher = require("./domain/CanonicalHasher");
 const groupBills = require("./domain/groupBills");
+const groupCompanies = require("./domain/groupCompanies");
 const groupVouchers = require("./domain/groupVouchers");
 const SyncService = require("./application/SyncService");
 const MssqlReadRepository = require("./infrastructure/mssql/MssqlReadRepository");
 const MssqlBillReadRepository = require("./infrastructure/mssql/MssqlBillReadRepository");
 const {
   BILLS_QUERY,
+  COMPANIES_QUERY,
   VOUCHERS_QUERY,
   RETURN_ADJUSTMENTS_QUERY,
 } = require("./infrastructure/mssql/queries");
@@ -21,12 +23,10 @@ async function bootstrap() {
   const syncStore = new SqliteSyncStore(config.sqlitePath);
   const target = new HttpSyncTarget(config.targetBaseUrl, config.syncApiKey);
   const hasher = new CanonicalHasher();
-  const pools = [];
   const services = [];
 
   for (const dataset of config.datasets) {
     const pool = await new sql.ConnectionPool(dataset.mssql).connect();
-    pools.push(pool);
     const addFinancialYear = (groupRows) => (rows) =>
       groupRows(rows).map((record) => ({
         ...record,
@@ -68,11 +68,22 @@ async function bootstrap() {
     );
   }
 
+  const companyPool = await new sql.ConnectionPool({
+    ...config.datasets[0].mssql,
+    database: config.companyDatabase,
+  }).connect();
+  const companyRepository = new MssqlReadRepository(
+    companyPool,
+    COMPANIES_QUERY,
+    groupCompanies,
+  );
+
   let running = false;
   const runAll = async () => {
     if (running) return;
     running = true;
     try {
+      await target.sendCompanies(await companyRepository.findAll());
       for (const service of services) {
         const result = await service.synchronize();
         console.log(`${service.storeEntityType} sync:`, result);
@@ -94,6 +105,7 @@ async function bootstrap() {
         database,
         financialYear,
       })),
+      companyDatabase: config.companyDatabase,
       returnAdjustments: config.syncReturnAdjustments,
     }),
   );

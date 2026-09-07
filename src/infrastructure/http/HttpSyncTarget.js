@@ -7,6 +7,7 @@ class HttpSyncTarget {
     const normalizedBaseUrl = baseUrl.replace(/\/$/, "");
     this.apiKey = apiKey.trim();
     this.endpoints = {
+      companies: `${normalizedBaseUrl}/api/v1/sync/companies`,
       bill: `${normalizedBaseUrl}/api/v1/sync/bills`,
       voucher: `${normalizedBaseUrl}/api/v1/sync/vouchers`,
     };
@@ -46,6 +47,15 @@ class HttpSyncTarget {
       endpoint,
       events.map((event) => JSON.parse(event.payloadJson)),
     );
+  }
+
+  async sendCompanies(companies) {
+    const batchSize = 100;
+    for (let start = 0; start < companies.length; start += batchSize) {
+      await this.postJson(this.endpoints.companies, {
+        companies: companies.slice(start, start + batchSize),
+      });
+    }
   }
 }
 

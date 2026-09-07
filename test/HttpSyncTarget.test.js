@@ -36,6 +36,20 @@ test("authenticates uploads with the sync API key", async () => {
     assert.deepEqual(JSON.parse(request.options.body), [
       { entryId: "1", compNo: "1" },
     ]);
+
+    await target.sendCompanies([
+      { externalCompanyId: "1", name: "MADHAV ENTERPRISE" },
+    ]);
+
+    assert.equal(
+      request.url,
+      "https://dashboard.example/api/v1/sync/companies",
+    );
+    assert.deepEqual(JSON.parse(request.options.body), {
+      companies: [
+        { externalCompanyId: "1", name: "MADHAV ENTERPRISE" },
+      ],
+    });
   } finally {
     global.fetch = originalFetch;
   }
